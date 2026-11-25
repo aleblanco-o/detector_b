@@ -1,7 +1,10 @@
 const $ = id => document.getElementById(id);
 // broetchen.onnx: YOLO26n-seg, end2end, imgsz 640. output0 [1,300,38] = x1 y1 x2 y2 score cls + 32 mask coefs,
 // output1 [1,32,160,160] = mask prototypes (model pixels / 4).
-const S = 640, P = 160, TH = 0.4;
+// TH 0.75: on 120 validation frames precision is flat from 0.75 up (0.972 / 0.973 at 0.8 / 0.974 at 0.85) while
+// recall drops (83 % / 81 % / 78 %); browser scores run a few points below Python, so 0.8 already lost a real
+// roll in test.jpg. Look-alikes (brown blobs) score ~0.96 at any threshold: the cure is negative training images.
+const S = 640, P = 160, TH = 0.75;
 const CLASSES = [
   { name: 'Normal', rgb: [218, 112, 44] },        // Flexoki orange
   { name: 'Körner', rgb: [135, 154, 57] },        // Flexoki green

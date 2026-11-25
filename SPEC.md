@@ -1,7 +1,7 @@
 # Spec: Brötchen-Erkenner (static web app)
 
 ## Objective
-Detect and segment three kinds of bread rolls (Normal, Körner, Sonnenblumen) live from the camera on phone and PC, fully in the browser, hosted on GitHub Pages. A German 4-step guide (Datenaufnahme, Labeling, Training, Inferenz) explains how such a model is made.
+Detect and segment (confidence ≥ 0.75) three kinds of bread rolls (Normal, Körner, Sonnenblumen) live from the camera on phone and PC, fully in the browser, hosted on GitHub Pages. A German 4-step guide (Datenaufnahme, Labeling, Training, Inferenz) explains how such a model is made.
 
 ## Tech stack
 Static `index.html` + `app.js` + `guide.js`, onnxruntime-web 1.22 from jsDelivr (WebGPU, fallback WASM single thread), `broetchen.onnx`: YOLO26n-seg trained at 1280 on 602 frames, exported at 640. No build step. Flexoki palette, light and dark.
