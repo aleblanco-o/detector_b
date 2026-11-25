@@ -33,14 +33,18 @@ video,#img{display:block;width:100%;height:auto}
 #testline{font:12px ui-monospace,monospace;color:var(--tx2);overflow-wrap:anywhere}
 #guide{margin-top:28px}
 #guide>h2{font-size:1.15rem;margin:0 0 8px}
-.steps{list-style:none;margin:0;padding:0 0 8px;display:grid;grid-auto-flow:column;grid-auto-columns:85%;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
-.steps li{scroll-snap-align:start}
-.steps .card{height:100%}
-.steps h3{margin:6px 0 4px;font-size:1rem}
-.steps p{margin:0;color:var(--tx2);font-size:.95rem}
-.steps .ill{color:var(--tx2)}.steps .ill svg{width:100%;height:auto;max-height:140px;display:block}
+.guide-card{display:grid;gap:4px;min-height:300px;align-content:start;max-width:560px}
+.guide-card .ill{display:flex;justify-content:center;padding:4px 0 8px}.guide-card .ill svg{width:128px;height:128px}
+.guide-card h3{margin:2px 0 4px;font-size:1.1rem}
+.guide-card p{margin:0;color:var(--tx2)}
 .num{color:var(--or);font-weight:700;font-size:.85rem}
-@media (min-width:800px){.steps{grid-auto-flow:row;grid-template-columns:repeat(4,1fr);overflow:visible}}
+.gnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;max-width:560px}
+.gnav button{min-height:44px;min-width:44px;padding:0 14px;border-radius:12px;border:1px solid var(--ui2);background:var(--bg2);color:var(--tx);font:600 .95rem system-ui,sans-serif;cursor:pointer}
+.gnav button:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:2px}
+.dots button{min-width:32px;padding:0;border:0;background:none;display:grid;place-items:center}
+.dots button::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--ui2)}
+.dots button[aria-current="step"]::after{background:var(--or);width:24px;border-radius:5px}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style></head><body>
 <main>
@@ -65,21 +69,35 @@ video,#img{display:block;width:100%;height:auto}
 </div>
 <section id="guide" aria-labelledby="guide-h" hidden>
   <h2 id="guide-h">So funktioniert es</h2>
-  <ol class="steps" id="steps" aria-label="Schritte, horizontal wischbar"></ol>
+  <article class="card guide-card" id="gcard" aria-live="polite"><div class="ill" aria-hidden="true"></div><span class="num"></span><h3></h3><p></p></article>
+  <nav class="gnav" aria-label="Schritte">
+    <button type="button" id="gprev">‹ Zurück</button>
+    <div class="dots" id="gdots"></div>
+    <button type="button" id="gnext">Weiter ›</button>
+  </nav>
 </section>
 </main>
 <script src="guide.js"></script>
 <script>
 (() => {
   const s = window.GUIDE_STEPS; if (!Array.isArray(s) || !s.length) return;
-  const ol = document.getElementById('steps');
-  s.forEach((g, i) => {
-    const li = document.createElement('li');
-    li.innerHTML = `<article class="card" aria-labelledby="g-${g.id}"><div class="ill" aria-hidden="true">${g.svg || ''}</div><span class="num">Schritt ${i + 1}</span><h3 id="g-${g.id}"></h3><p></p></article>`;
-    li.querySelector('h3').textContent = g.title; li.querySelector('p').textContent = g.text;
-    ol.append(li);
+  const $ = id => document.getElementById(id), card = $('gcard'), dots = $('gdots');
+  let i = 0;
+  const show = n => {
+    i = Math.max(0, Math.min(s.length - 1, n)); const g = s[i];
+    card.querySelector('.ill').innerHTML = g.svg || '';
+    card.querySelector('.num').textContent = `Schritt ${i + 1} von ${s.length}`;
+    card.querySelector('h3').textContent = g.title; card.querySelector('p').textContent = g.text;
+    [...dots.children].forEach((d, k) => d.setAttribute('aria-current', k == i ? 'step' : 'false'));
+    $('gprev').disabled = i == 0; $('gnext').disabled = i == s.length - 1;
+  };
+  s.forEach((g, k) => {
+    const b = document.createElement('button'); b.type = 'button'; b.setAttribute('aria-label', `Schritt ${k + 1}: ${g.title}`);
+    b.onclick = () => show(k); dots.append(b);
   });
-  document.getElementById('guide').hidden = false;
+  $('gprev').onclick = () => show(i - 1); $('gnext').onclick = () => show(i + 1);
+  card.onkeydown = e => e.key == 'ArrowLeft' ? show(i - 1) : e.key == 'ArrowRight' && show(i + 1);
+  show(0); $('guide').hidden = false;
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js"></script>

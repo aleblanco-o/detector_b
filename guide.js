@@ -1,27 +1,54 @@
-// Lernpfad-Vignetten: 4 Schritte vom Foto zum erkannten Brötchen. Farben nur über CSS-Variablen (hell/dunkel).
+// Lernpfad: 4 Schritte vom Foto zum erkannten Brötchen. Brot ist immer brotfarben;
+// Umrisse und Akzente über Flexoki-CSS-Variablen (hell/dunkel).
+const CRUST = '#D49A4E', SCORE = '#9C5F25';
+// A roll centred on (x, y), w wide; type: 'normal' (scores), 'koerner' (light seeds), 'sonnen' (dark seeds).
+const roll = (x, y, w, type = 'normal') => {
+  const s = w / 60, deco = {
+    normal: `<path d="M-14-6q14-7 28 0" fill="none" stroke="${SCORE}" stroke-width="4" stroke-linecap="round"/>`,
+    koerner: '<g fill="#F4E6C4"><ellipse cx="-12" cy="-6" rx="3" ry="2"/><ellipse cx="0" cy="-11" rx="3" ry="2"/><ellipse cx="12" cy="-6" rx="3" ry="2"/><ellipse cx="-5" cy="1" rx="3" ry="2"/><ellipse cx="7" cy="2" rx="3" ry="2"/></g>',
+    sonnen: '<g fill="#4A3B2A"><ellipse cx="-12" cy="-5" rx="2.2" ry="4" transform="rotate(-30 -12 -5)"/><ellipse cx="0" cy="-10" rx="2.2" ry="4"/><ellipse cx="12" cy="-5" rx="2.2" ry="4" transform="rotate(30 12 -5)"/><ellipse cx="-4" cy="2" rx="2.2" ry="4" transform="rotate(-15 -4 2)"/><ellipse cx="7" cy="2" rx="2.2" ry="4" transform="rotate(20 7 2)"/></g>',
+  }[type];
+  return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M-30 10C-30-10-15-20 0-20S30-10 30 10Q30 16 24 16H-24Q-30 16-30 10Z" fill="${CRUST}" stroke="var(--tx)" stroke-width="${4 / s}" stroke-linejoin="round"/>${deco}</g>`;
+};
+const svg = (label, body) => `<svg viewBox="0 0 120 120" role="img" aria-label="${label}" focusable="false" fill="none" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
+
 window.GUIDE_STEPS = [
   {
     id: 'aufnahme',
     title: 'Datenaufnahme',
     text: 'Fotografiere viele Brötchen auf dem Band oder Tisch. Nimm verschiedene Winkel, Abstände und Licht.',
-    svg: '<svg viewBox="0 0 120 120" role="img" aria-label="Kamera fotografiert ein Brötchen" focusable="false"><rect x="10" y="30" width="70" height="50" rx="8" fill="var(--ui)" stroke="var(--tx)" stroke-width="5"/><rect x="26" y="20" width="20" height="12" rx="3" fill="var(--ui)" stroke="var(--tx)" stroke-width="5"/><circle cx="45" cy="55" r="14" fill="var(--bl)" stroke="var(--tx)" stroke-width="5"/><ellipse cx="95" cy="92" rx="18" ry="12" fill="var(--or)" stroke="var(--tx)" stroke-width="5"/><path d="M88 88q7-5 14 0" fill="none" stroke="var(--tx)" stroke-width="4" stroke-linecap="round"/><path d="M84 40l10-8M88 52l14-2M84 64l12 6" stroke="var(--ye)" stroke-width="5" stroke-linecap="round"/></svg>'
+    svg: svg('Kamera fotografiert Brötchen',
+      '<path d="M14 38h16l6-9h22l6 9h16a6 6 0 0 1 6 6v34a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V44a6 6 0 0 1 6-6z" fill="var(--bg2)" stroke="var(--tx)" stroke-width="4"/>' +
+      '<circle cx="47" cy="60" r="14" fill="var(--ui)" stroke="var(--tx)" stroke-width="4"/><circle cx="47" cy="60" r="6" fill="var(--bl)"/>' +
+      roll(88, 98, 40) + '<path d="M96 30l8-8M100 44h10" stroke="var(--or)" stroke-width="4"/>'),
   },
   {
     id: 'labeling',
     title: 'Labeling',
     text: 'Zeichne in CVAT einen Umriss (Polygon) um jedes Brötchen. Wähle dann die Klasse: Normal, Körner oder Sonnenblumen.',
-    svg: '<svg viewBox="0 0 120 120" role="img" aria-label="Brötchen mit gestricheltem Umriss und Etikett" focusable="false"><ellipse cx="52" cy="70" rx="32" ry="22" fill="var(--gr)" stroke="var(--tx)" stroke-width="5"/><circle cx="42" cy="66" r="3" fill="var(--tx)"/><circle cx="56" cy="62" r="3" fill="var(--tx)"/><circle cx="62" cy="76" r="3" fill="var(--tx)"/><path d="M14 70L26 42L52 38L84 46L94 72L80 96L40 98Z" fill="none" stroke="var(--bl)" stroke-width="4" stroke-dasharray="8 6" stroke-linejoin="round"/><path d="M84 14h24v18l-12 10-12-10z" fill="var(--ye)" stroke="var(--tx)" stroke-width="5" stroke-linejoin="round"/><circle cx="96" cy="24" r="3" fill="var(--tx)"/></svg>'
+    svg: svg('Brötchen mit gezeichnetem Umriss',
+      roll(56, 66, 64, 'koerner') +
+      '<path d="M18 74L24 48L44 36L70 36L90 50L94 76Z" stroke="var(--bl)" stroke-width="4" stroke-dasharray="7 6"/>' +
+      '<g fill="var(--bl)"><circle cx="18" cy="74" r="5"/><circle cx="24" cy="48" r="5"/><circle cx="44" cy="36" r="5"/><circle cx="70" cy="36" r="5"/><circle cx="90" cy="50" r="5"/><circle cx="94" cy="76" r="5"/></g>' +
+      '<path d="M86 104l20-20 6 6-20 20h-6z" fill="var(--ye)" stroke="var(--tx)" stroke-width="4"/>'),
   },
   {
     id: 'training',
     title: 'Training',
     text: 'Der Computer lernt auf einer GPU aus deinen Bildern. Über viele Epochen wird er immer besser.',
-    svg: '<svg viewBox="0 0 120 120" role="img" aria-label="Grafikchip mit steigender Lernkurve" focusable="false"><rect x="14" y="40" width="50" height="50" rx="6" fill="var(--ui)" stroke="var(--tx)" stroke-width="5"/><rect x="28" y="54" width="22" height="22" rx="3" fill="var(--bl)"/><path d="M24 40v-8M39 40v-8M54 40v-8M24 98v-8M39 98v-8M54 98v-8M14 52H6M14 78H6M72 52h-8M72 78h-8" stroke="var(--tx)" stroke-width="4" stroke-linecap="round"/><path d="M76 100V20M76 100h38" stroke="var(--tx)" stroke-width="4" stroke-linecap="round"/><path d="M80 92q10-4 14-20t16-44" fill="none" stroke="var(--gr)" stroke-width="5" stroke-linecap="round"/></svg>'
+    svg: svg('Lernkurve steigt mit jeder Epoche',
+      '<path d="M16 16v88h92" stroke="var(--tx)" stroke-width="4"/>' +
+      '<path d="M22 92C40 90 46 60 60 52S88 30 104 26" stroke="var(--gr)" stroke-width="6"/>' +
+      '<g fill="var(--bg)" stroke="var(--gr)" stroke-width="4"><circle cx="40" cy="80" r="5"/><circle cx="64" cy="50" r="5"/><circle cx="90" cy="32" r="5"/></g>' +
+      roll(84, 84, 34, 'sonnen')),
   },
   {
     id: 'inferenz',
     title: 'Inferenz',
     text: 'Das fertige Modell erkennt Brötchen live in der Kamera. Genau das macht diese App!',
-    svg: '<svg viewBox="0 0 120 120" role="img" aria-label="Handy erkennt ein Brötchen mit Rahmen" focusable="false"><rect x="30" y="8" width="60" height="104" rx="10" fill="var(--bg2)" stroke="var(--tx)" stroke-width="5"/><path d="M52 100h16" stroke="var(--tx)" stroke-width="5" stroke-linecap="round"/><ellipse cx="60" cy="56" rx="18" ry="13" fill="var(--ye)" stroke="var(--tx)" stroke-width="5"/><path d="M52 52l3 3M62 50l3 3M58 60l3 3" stroke="var(--tx)" stroke-width="3" stroke-linecap="round"/><rect x="36" y="36" width="48" height="40" rx="3" fill="none" stroke="var(--gr)" stroke-width="5"/><rect x="36" y="26" width="20" height="10" fill="var(--gr)"/></svg>'
-  }
+    svg: svg('Handy erkennt ein Brötchen',
+      '<rect x="28" y="6" width="64" height="108" rx="12" fill="var(--bg2)" stroke="var(--tx)" stroke-width="4"/><path d="M52 102h16" stroke="var(--tx)" stroke-width="4"/>' +
+      roll(60, 58, 40, 'normal') +
+      '<rect x="34" y="34" width="52" height="42" rx="4" stroke="var(--gr)" stroke-width="4"/><path d="M34 34h22v-10H38a4 4 0 0 0-4 4z" fill="var(--gr)"/>'),
+  },
 ];
