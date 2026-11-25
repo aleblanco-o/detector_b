@@ -1,22 +1,87 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Mouse Detector</title>
+<html lang="de"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Brötchen-Erkenner</title>
 <style>
-body{font:16px system-ui,sans-serif;margin:0;padding:12px;background:#111;color:#eee}
-#wrap{position:relative;width:100%;max-width:640px;margin:8px 0;background:#000}
-video,#img{display:block;width:100%}
+:root{--bg:#FFFCF0;--bg2:#F2F0E5;--ui:#E6E4D9;--ui2:#DAD8CE;--tx:#100F0F;--tx2:#6F6E69;--tx3:#B7B5AC;
+--or:#BC5215;--gr:#66800B;--ye:#AD8301;--bl:#205EA6;--re:#AF3029}
+@media (prefers-color-scheme:dark){:root{--bg:#100F0F;--bg2:#1C1B1A;--ui:#282726;--ui2:#343331;--tx:#CECDC3;--tx2:#878580;--tx3:#575653;
+--or:#DA702C;--gr:#879A39;--ye:#D0A215;--bl:#4385BE;--re:#D14D41}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:960px;margin:0 auto;padding:max(12px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) max(24px,env(safe-area-inset-bottom)) max(16px,env(safe-area-inset-left))}
+h1{font-size:1.4rem;margin:4px 0 2px}
+.sub{color:var(--tx2);margin:0 0 12px;font-size:.95rem}
+.app{display:grid;gap:12px}
+@media (min-width:800px){.app{grid-template-columns:minmax(0,1fr) 280px;align-items:start}}
+#wrap{position:relative;width:100%;max-width:calc(75svh * 16 / 9);margin:0 auto;background:var(--bg2);border:1px solid var(--ui);border-radius:12px;overflow:hidden;min-height:180px}
+video,#img{display:block;width:100%;height:auto}
 #ov{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
-button{font-size:18px;padding:10px 20px}
+.panel{display:grid;gap:12px}
+#start{min-height:48px;width:100%;font:600 1.05rem system-ui,sans-serif;border:0;border-radius:12px;background:var(--tx);color:var(--bg);cursor:pointer}
+#start:disabled{opacity:.55;cursor:default}
+:focus-visible{outline:3px solid var(--bl);outline-offset:2px}
+#status{color:var(--tx2);font-size:.95rem;min-height:1.4em}
+.card{background:var(--bg2);border:1px solid var(--ui);border-radius:12px;padding:12px}
+.card h2{font-size:.85rem;color:var(--tx2);margin:0 0 8px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.counts{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.counts li{display:flex;align-items:center;gap:8px;min-height:32px}
+.chip{width:14px;height:14px;border-radius:50%;flex:none}
+.counts b{margin-left:auto;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.meta{color:var(--tx2);font-size:.8rem;margin:8px 0 0}
+#testline{font:12px ui-monospace,monospace;color:var(--tx2);overflow-wrap:anywhere}
+#guide{margin-top:28px}
+#guide>h2{font-size:1.15rem;margin:0 0 8px}
+.steps{list-style:none;margin:0;padding:0 0 8px;display:grid;grid-auto-flow:column;grid-auto-columns:85%;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.steps li{scroll-snap-align:start}
+.steps .card{height:100%}
+.steps h3{margin:6px 0 4px;font-size:1rem}
+.steps p{margin:0;color:var(--tx2);font-size:.95rem}
+.steps .ill{color:var(--tx2)}.steps .ill svg{width:100%;height:auto;max-height:140px;display:block}
+.num{color:var(--or);font-weight:700;font-size:.85rem}
+@media (min-width:800px){.steps{grid-auto-flow:row;grid-template-columns:repeat(4,1fr);overflow:visible}}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
 </style></head><body>
-<h1 style="font-size:20px;margin:0 0 8px">Mouse Detector</h1>
-<button id="start">Start camera</button>
-<label><input type="checkbox" id="all"> show all classes</label>
-<div id="wrap"><video id="vid" playsinline muted autoplay></video><canvas id="ov"></canvas></div>
-<div id="status">Idle</div>
-<div>Mice: <b id="count">0</b> | FPS: <b id="fps">0</b> | Backend: <b id="backend">-</b></div>
-<div id="testline"></div>
+<main>
+<h1>Brötchen-Erkenner</h1>
+<p class="sub">Erkennt Normal-, Körner- und Sonnenblumenbrötchen live mit der Kamera.</p>
+<div class="app">
+  <div id="wrap" aria-label="Kamerabild mit Erkennungen"><video id="vid" playsinline muted autoplay></video><canvas id="ov" aria-hidden="true"></canvas></div>
+  <div class="panel">
+    <button id="start" type="button">Kamera starten</button>
+    <div id="status" role="status" aria-live="polite">Bereit</div>
+    <section class="card" aria-labelledby="res-h">
+      <h2 id="res-h">Ergebnis</h2>
+      <ul class="counts">
+        <li><span class="chip" aria-hidden="true" style="background:#DA702C"></span>Normal<b id="count0">0</b></li>
+        <li><span class="chip" aria-hidden="true" style="background:#879A39"></span>Körner<b id="count1">0</b></li>
+        <li><span class="chip" aria-hidden="true" style="background:#D0A215"></span>Sonnenblumen<b id="count2">0</b></li>
+      </ul>
+      <p class="meta"><span id="fps">0</span> FPS · <span id="backend">-</span></p>
+    </section>
+    <div id="testline"></div>
+  </div>
+</div>
+<section id="guide" aria-labelledby="guide-h" hidden>
+  <h2 id="guide-h">So funktioniert es</h2>
+  <ol class="steps" id="steps" aria-label="Schritte, horizontal wischbar"></ol>
+</section>
+</main>
+<script src="guide.js"></script>
+<script>
+(() => {
+  const s = window.GUIDE_STEPS; if (!Array.isArray(s) || !s.length) return;
+  const ol = document.getElementById('steps');
+  s.forEach((g, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<article class="card" aria-labelledby="g-${g.id}"><div class="ill" aria-hidden="true">${g.svg || ''}</div><span class="num">Schritt ${i + 1}</span><h3 id="g-${g.id}"></h3><p></p></article>`;
+    li.querySelector('h3').textContent = g.title; li.querySelector('p').textContent = g.text;
+    ol.append(li);
+  });
+  document.getElementById('guide').hidden = false;
+})();
+</script>
 <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.webgpu.min.js"></script>
 <script src="app.js"></script>
-<p style="font-size:12px">Test image: Wikimedia Commons, "A wireless computer mouse.jpg", CC BY-SA 4.0.</p>
 </body></html>
